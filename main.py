@@ -11,17 +11,32 @@ class User:
         self.email = email
         self.password = password
 
-    def send_mails(self, sender, emails):
-        for email in emails['contacts']:
+    def select_messenger_client(self, user_email, user_data):
+        selection_data = {}
+        for index, contact in enumerate(user_data['contacts'], start=1):
+            selection_data[index] = (contact['name'], contact['email'])
+            print(f"{index} - {contact['name']}")
+
+        user_selection = int(input('Select Client Index: '))
+        if user_selection in selection_data:
+            message = []
             try:
-                prompt = input('Message: ')
-                message = f"Subject: Hello, {email['name']}\n{prompt}"
-                if self.conn.sendmail(sender, email['email'], message) == {}:
-                    print(colorama.Fore.GREEN,
-                        f'[*] Successfully sent mail to: {email["name"]}', colorama.Style.RESET_ALL)
-            except smtplib.SMTPException as send_err:
-                print(colorama.Fore.RED,
-                    f'[!!] Failed to send mail to: {email} {send_err}', colorama.Style.RESET_ALL)
+                while True:
+                    prompt_message = str(input(f'Message To {selection_data[user_selection][0]}: '))
+                    message.append(prompt_message)
+            except KeyboardInterrupt:
+                User(self.conn, self.email, self.password).send_mails(
+                        user_email, selection_data[user_selection][0], selection_data[user_selection][1], '\n'.join(message))
+
+    def send_mails(self, sender_email, client_name, client_email, sender_message):
+        try:
+            message = f"Subject: Hello, {client_name}\n{sender_message}"
+            if self.conn.sendmail(sender_email, client_email, message) == {}:
+                print(colorama.Fore.GREEN,
+                    f'[*] Successfully sent mail to: {client_name}', colorama.Style.RESET_ALL)
+        except smtplib.SMTPException as send_err:
+            print(colorama.Fore.RED,
+                f'[!!] Failed to send mail to: {client_email} {send_err}', colorama.Style.RESET_ALL)
 
 class Connection:
 
@@ -51,20 +66,20 @@ class Connection:
                 f'[!!] Authentication Error! {autherr}', colorama.Style.RESET_ALL)
 
 
-def read_json(filename='contacts.json'):
-    with open(filename, 'r', encoding='utf-8') as j_source:
-        source = json.load(j_source)    
-    return source
-
-
-def write_json(data, filename='contacts.json'):
-    with open(filename, 'w', encoding='utf-8') as f_source:
-        json.dump(data, f_source, indent=2)
+class JSON_Data:
+    
+    def read_json(self, filename='contacts.json'):
+        with open(filename, 'r', encoding='utf-8') as j_source:
+            source = json.load(j_source)    
+        return source
+    
+    def write_json(self, data, filename='contacts.json'):
+        with open(filename, 'w', encoding='utf-8') as f_source:
+            json.dump(data, f_source, indent=2)
 
 
 def login():
-    source = read_json()
-
+    source = JSON_Data().read_json()
     if source['user_email'] == "":
         my_email = str(input('Enter Email: '))
         source['user_email'] = my_email
@@ -73,12 +88,11 @@ def login():
         my_email = source['user_email']
 
     my_pass = getpass('Enter Password: ')
-
     connection = Connection(my_email, my_pass)
     my_user = User(connection.gmail_login(connection.server_connection()), my_email, my_pass)
 
     if not source['contacts'] == []:
-        my_user.send_mails(my_email, source)
+        my_user.select_messenger_client(my_email, source)
     else:
         print(colorama.Fore.RED,
             '[!!] No contacts', colorama.Style.RESET_ALL)

@@ -84,7 +84,7 @@ def login():
     if source['user_email'] == "":
         my_email = str(input('Enter Email: '))
         source['user_email'] = my_email
-        write_json(source)
+        JSON_Data().write_json(source)
     else:
         my_email = source['user_email']
 

@@ -64,6 +64,7 @@ class Connection:
         except smtplib.SMTPAuthenticationError as autherr:
             print(colorama.Fore.RED,
                 f'[!!] Authentication Error! {autherr}', colorama.Style.RESET_ALL)
+            quit()
 
 
 class JSON_Data:

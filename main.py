@@ -23,7 +23,10 @@ class User:
             try:
                 while True:
                     prompt_message = str(input(f'Message To {selection_data[user_selection][0]}: '))
-                    message.append(prompt_message)
+                    if prompt_message == "cancel" or prompt_message == "quit":
+                        quit()
+                    else:
+                        message.append(prompt_message)
             except KeyboardInterrupt:
                 User(self.conn, self.email, self.password).send_mails(
                         user_email, selection_data[user_selection][0], selection_data[user_selection][1], '\n'.join(message))
@@ -33,10 +36,10 @@ class User:
             message = f"Subject: Hello, {client_name}\n{sender_message}"
             if self.conn.sendmail(sender_email, client_email, message) == {}:
                 print(colorama.Fore.GREEN,
-                    f'[*] Successfully sent mail to: {client_name}', colorama.Style.RESET_ALL)
+                    f'\n[*] Successfully sent mail to: {client_name}', colorama.Style.RESET_ALL)
         except smtplib.SMTPException as send_err:
             print(colorama.Fore.RED,
-                f'[!!] Failed to send mail to: {client_email} {send_err}', colorama.Style.RESET_ALL)
+                f'\n[!!] Failed to send mail to: {client_email} {send_err}', colorama.Style.RESET_ALL)
 
 class Connection:
 
@@ -68,12 +71,12 @@ class Connection:
 
 
 class JSON_Data:
-    
+
     def read_json(self, filename='contacts.json'):
         with open(filename, 'r', encoding='utf-8') as j_source:
-            source = json.load(j_source)    
+            source = json.load(j_source)
         return source
-    
+
     def write_json(self, data, filename='contacts.json'):
         with open(filename, 'w', encoding='utf-8') as f_source:
             json.dump(data, f_source, indent=2)
@@ -101,10 +104,6 @@ def login():
     if connection.server_connection().close() == None:
         print(colorama.Fore.GREEN,
             '\n[*] Server has been successfully closed\n', colorama.Style.RESET_ALL)
-    else:
-        print(colorama.Fore.RED,
-            '[!!] For some odd reason, the server cannot be closed',
-            colorama.Style.RESET_ALL)
 
 
 if __name__ == '__main__':

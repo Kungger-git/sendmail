@@ -11,7 +11,7 @@ class Manage_Users:
         self.email = credentials[1]
 
     def add_user(self):
-        source = read_json()
+        source = JSON_Data().read_json()
         user_data = {
                 'name': self.name,
                 'email': self.email
@@ -23,16 +23,16 @@ class Manage_Users:
                 colorama.Style.RESET_ALL)
         else:
             temp.append(user_data)
-            write_json(source)
+            JSON_Data().write_json(source)
 
             if user_data in source['contacts']:
                 print(colorama.Fore.GREEN,
                     f'[*] {self.name}/{self.email} has been added to your contacts list',
                     colorama.Style.RESET_ALL)
-    
+
     def remove_user(self):
-        source = read_json()
-        
+        source = JSON_Data().read_json()
+
         rm_data = {
                 'name': self.name,
                 'email': self.email
@@ -50,38 +50,50 @@ class Manage_Users:
                 print(colorama.Fore.GREEN,
                     f'[*] {self.name}/{self.email} has been removed from your contacts list',
                     colorama.Style.RESET_ALL)
+        JSON_Data().write_json(source)
 
-        write_json(source)
+    def change_name(self):
+        source = JSON_Data().read_json()
+        old_name = ""
+        for contact in source['contacts']:
+            if self.email == contact['email']:
+                old_name = contact['name']
+                contact['name'] = self.name
+                JSON_Data().write_json(source)
+                print(colorama.Fore.GREEN,
+                        f"[*] Name for {contact['email']} has been changed from {old_name} to {self.name}",
+                        colorama.Style.RESET_ALL)
 
 
 def list_contacts():
-    source = read_json()
+    source = JSON_Data().read_json()
     for user in source['contacts']:
         print(f"Name: {user['name']}\tEmail: {user['email']}")
 
 
-def read_json(filename='contacts.json'):
-    with open(filename, 'r', encoding='utf-8') as j_source:
-        source = json.load(j_source) 
-    return source
+class JSON_Data:
 
+    def read_json(self, filename='contacts.json'):
+        with open(filename, 'r', encoding='utf-8') as j_source:
+            source = json.load(j_source)
+        return source
 
-def write_json(data, filename='contacts.json'):
-    with open(filename, 'w', encoding='utf-8') as f_source:
-        json.dump(data, f_source, indent=2)
+    def write_json(self, data, filename='contacts.json'):
+        with open(filename, 'w', encoding='utf-8') as f_source:
+            json.dump(data, f_source, indent=2)
 
+    def make_json(self):
+        data_set = {'user_email': ''}
+        data_set['contacts'] = []
 
-def make_json():
-    data_set = {'user_email': ''}
-    data_set['contacts'] = []
+        JSON_Data().write_json(data_set)
 
-    write_json(data_set)
 
 if __name__ == '__main__':
     colorama.init()
     parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter,
                             description='Adds/Removes Contacts from contacts.json')
-    
+
     parser.add_argument('-a', '--add',
                         nargs=2, metavar='ADD',
                         action='store',
@@ -96,9 +108,14 @@ if __name__ == '__main__':
                         action='store_true',
                         help='Lists all contacts.')
 
+    parser.add_argument('--change-name',
+                        nargs=2, metavar='CHANGE_NAME',
+                        action='store',
+                        help='Change contact name')
+
     args = parser.parse_args()
     if not os.path.exists('contacts.json'):
-        make_json()
+        JSON_Data().make_json()
 
     if args.add:
         Manage_Users([x for x in args.add]).add_user()
@@ -108,3 +125,6 @@ if __name__ == '__main__':
 
     if args.list:
        list_contacts()
+
+    if args.change_name:
+        Manage_Users([x for x in args.change_name]).change_name()

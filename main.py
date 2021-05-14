@@ -2,7 +2,9 @@ import os
 import json
 import smtplib
 import colorama
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from getpass import getpass
+
 
 class User:
 
@@ -17,19 +19,22 @@ class User:
             selection_data[index] = (contact['name'], contact['email'])
             print(f"{index} - {contact['name']}")
 
-        user_selection = int(input('Select Client Index: '))
-        if user_selection in selection_data:
-            message = []
-            try:
-                while True:
-                    prompt_message = str(input(f'Message To {selection_data[user_selection][0]}: '))
-                    if prompt_message == "cancel" or prompt_message == "quit":
-                        quit()
-                    else:
-                        message.append(prompt_message)
-            except KeyboardInterrupt:
-                User(self.conn, self.email, self.password).send_mails(
-                        user_email, selection_data[user_selection][0], selection_data[user_selection][1], '\n'.join(message))
+        try:
+            user_selection = int(input('Select Client Index: '))
+            if user_selection in selection_data:
+                message = []
+                try:
+                    while True:
+                        prompt_message = str(input(f'Message To {selection_data[user_selection][0]}: '))
+                        if prompt_message == "cancel" or prompt_message == "quit":
+                            quit()
+                        else:
+                            message.append(prompt_message)
+                except KeyboardInterrupt:
+                    User(self.conn, self.email, self.password).send_mails(
+                            user_email, selection_data[user_selection][0], selection_data[user_selection][1], '\n'.join(message))
+        except KeyboardInterrupt:
+            print('\n\nStopped!')
 
     def send_mails(self, sender_email, client_name, client_email, sender_message):
         try:
@@ -106,11 +111,53 @@ def login():
             '\n[*] Server has been successfully closed\n', colorama.Style.RESET_ALL)
 
 
+class User_Info:
+
+    def current_email(self):
+        source = JSON_Data().read_json()
+        print(colorama.Fore.YELLOW,
+                f"[!] Current User/Sender Email: ",
+                colorama.Style.RESET_ALL, source['user_email'])
+
+    def change_email(self, new_email):
+        source = JSON_Data().read_json()
+
+        for email in new_email:
+            if source['user_email'] == email:
+                print(colorama.Fore.YELLOW,
+                        f"[!] {email} is already the current User/Sender Email being used",
+                        colorama.Style.RESET_ALL)
+            else:
+                source['user_email'] = email
+                JSON_Data().write_json(source)
+                print(colorama.Fore.GREEN,
+                        f"[*] User/Sender Email has been changed to {source['user_email']}",
+                        colorama.Style.RESET_ALL)
+
+
 if __name__ == '__main__':
     colorama.init()
-    if not os.path.exists('contacts.json'):
-        print(colorama.Fore.RED,
-            f'[!!] Could not perform operation if there is not a contact list',
-            colorama.Style.RESET_ALL)
+    parser = ArgumentParser(formatter_class=RawDescriptionHelpFormatter,
+                            description='Write mails to whoever you want.')
+
+    parser.add_argument('--change-email',
+                        nargs=1, type=str,
+                        metavar='CHANGE_EMAIL',
+                        help='Change user/sender email')
+
+    parser.add_argument('--current-email',
+                        action='store_true',
+                        help='Views current User/Sender Email')
+
+    args = parser.parse_args()
+    if args.change_email:
+        User_Info().change_email([x for x in args.change_email])
+    elif args.current_email:
+        User_Info().current_email()
     else:
-        login()
+        if not os.path.exists('contacts.json'):
+            print(colorama.Fore.RED,
+                f'[!!] Could not perform operation if there is not a contact list',
+                colorama.Style.RESET_ALL)
+        else:
+            login()

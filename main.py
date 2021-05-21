@@ -121,18 +121,22 @@ class User_Info:
 
     def change_email(self, new_email):
         source = JSON_Data().read_json()
-
         for email in new_email:
-            if source['user_email'] == email:
-                print(colorama.Fore.YELLOW,
-                        f"[!] {email} is already the current User/Sender Email being used",
+            if not email.endswith('@gmail.com'):
+                print(colorama.Fore.RED,
+                        f"[!!] {email} is not a valid google email address",
                         colorama.Style.RESET_ALL)
             else:
-                source['user_email'] = email
-                JSON_Data().write_json(source)
-                print(colorama.Fore.GREEN,
-                        f"[*] User/Sender Email has been changed to {source['user_email']}",
-                        colorama.Style.RESET_ALL)
+                if source['user_email'] == email:
+                    print(colorama.Fore.YELLOW,
+                            f"[!] {email} is already the current User/Sender Email being used",
+                            colorama.Style.RESET_ALL)
+                else:
+                    source['user_email'] = email
+                    JSON_Data().write_json(source)
+                    print(colorama.Fore.GREEN,
+                            f"[*] User/Sender Email has been changed to {source['user_email']}",
+                            colorama.Style.RESET_ALL)
 
 
 if __name__ == '__main__':

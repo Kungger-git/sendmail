@@ -96,19 +96,22 @@ def login():
     else:
         my_email = source['user_email']
 
-    my_pass = getpass('Enter Password: ')
-    connection = Connection(my_email, my_pass)
-    my_user = User(connection.gmail_login(connection.server_connection()), my_email, my_pass)
+    try:
+        my_pass = getpass('Enter Password: ')
+        connection = Connection(my_email, my_pass)
+        my_user = User(connection.gmail_login(connection.server_connection()), my_email, my_pass)
 
-    if not source['contacts'] == []:
-        my_user.select_messenger_client(my_email, source)
-    else:
-        print(colorama.Fore.RED,
-            '[!!] No contacts', colorama.Style.RESET_ALL)
+        if not source['contacts'] == []:
+            my_user.select_messenger_client(my_email, source)
+        else:
+            print(colorama.Fore.RED,
+                '[!!] No contacts', colorama.Style.RESET_ALL)
 
-    if connection.server_connection().close() == None:
-        print(colorama.Fore.GREEN,
-            '\n[*] Server has been successfully closed\n', colorama.Style.RESET_ALL)
+        if connection.server_connection().close() == None:
+            print(colorama.Fore.GREEN,
+                '\n[*] Server has been successfully closed\n', colorama.Style.RESET_ALL)
+    except KeyboardInterrupt:
+        print('\nStopped!')
 
 
 class User_Info:
